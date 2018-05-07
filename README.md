@@ -13,9 +13,11 @@ this repo includes a set of scripts to get the samba sources, add the vfs plugin
 
 ```bash
 SAMBA_VERSION=samba-4.8.1 JOBS=8 make
-``` 
+```
 
 `SAMBA_VERSION` needs to be set to a valid branch or tag in the [samba sources](http://github.com/samba-team/samba/).
+
+Note: when running `make` the first time for a samba version you might get a 'Unable to find build target matching' error, simply re-running make should fix this issue.
 
 The compiled vfs plugin will be placed at `build/bin/$SAMBA_VERSION/notify_redis.so`
 
