@@ -1,0 +1,64 @@
+diff --git a/lib/util/wscript b/lib/util/wscript
+index 953becf6563..c6f4e0c94bd 100644
+--- a/lib/util/wscript
++++ b/lib/util/wscript
+@@ -21,3 +21,7 @@ def set_options(opt):
+     opt.add_option('--with-gpfs',
+                    help=("Directory under which gpfs headers are installed"),
+                    action="store", dest='gpfs_headers_dir', default="/usr/lpp/mmfs/include/")
++
++    opt.add_option('--with-hiredis',
++                   help=("Directory under which hiredis headers are installed"),
++                   action="store", dest='hiredis_headers_dir', default="/usr/include/hiredis/")
+diff --git a/lib/util/wscript_configure b/lib/util/wscript_configure
+index 2a8dbef699b..bbef6571125 100644
+--- a/lib/util/wscript_configure
++++ b/lib/util/wscript_configure
+@@ -139,3 +139,8 @@ if (conf.CONFIG_SET('HAVE_LTTNG_TRACEF_H') and
+ conf.env['CPPPATH_GPFS'] = Options.options.gpfs_headers_dir
+ if conf.CHECK_HEADERS('gpfs.h', False, False, "gpfs"):
+     conf.DEFINE('HAVE_GPFS', '1')
++
++conf.env['CPPPATH_HIREDIS'] = Options.options.hiredis_headers_dir
++if conf.CHECK_HEADERS('hiredis.h', False, False, "hiredis"):
++    conf.CHECK_LIB('hiredis', shlib=True)
++    conf.DEFINE('HAVE_HIREDIS', '1')
+diff --git a/source3/modules/wscript_build b/source3/modules/wscript_build
+index 027283bff87..c17fa8dd6fe 100644
+--- a/source3/modules/wscript_build
++++ b/source3/modules/wscript_build
+@@ -53,6 +53,15 @@ bld.SAMBA3_MODULE('vfs_audit',
+                  internal_module=bld.SAMBA3_IS_STATIC_MODULE('vfs_audit'),
+                  enabled=bld.SAMBA3_IS_ENABLED_MODULE('vfs_audit'))
+ 
++bld.SAMBA3_MODULE('vfs_notify_redis',
++                  subsystem='vfs',
++                  source='vfs_notify_redis.c',
++                  deps='samba-util hiredis',
++                  init_function='',
++                  internal_module=bld.SAMBA3_IS_STATIC_MODULE('vfs_notify_redis'),
++                  enabled=bld.SAMBA3_IS_ENABLED_MODULE('vfs_notify_redis'),
++                  includes=bld.CONFIG_GET('CPPPATH_HIREDIS'))
++
+ bld.SAMBA3_MODULE('vfs_extd_audit',
+                  subsystem='vfs',
+                  source='vfs_extd_audit.c',
+diff --git a/source3/wscript b/source3/wscript
+index ab64e80214e..af129332c68 100644
+--- a/source3/wscript
++++ b/source3/wscript
+@@ -1642,7 +1642,7 @@ main() {
+                                       idmap_nss'''))
+ 
+     default_shared_modules.extend(TO_LIST('''
+-                                      vfs_recycle vfs_audit vfs_extd_audit vfs_full_audit vfs_netatalk
++                                      vfs_recycle vfs_audit vfs_notify_redis vfs_extd_audit vfs_full_audit vfs_netatalk
+                                       vfs_fake_perms vfs_default_quota vfs_readonly vfs_cap
+                                       vfs_expand_msdfs vfs_shadow_copy vfs_shadow_copy2
+                                       vfs_readahead vfs_xattr_tdb
+@@ -1834,4 +1834,5 @@ main() {
+         Logs.info("%s: %s" % (static_env, ','.join(conf.env[static_env])))
+         Logs.info("%s: %s" % (shared_env, ','.join(conf.env[shared_env])))
+ 
++    conf.CHECK_HEADERS('hiredis.h')
+     conf.SAMBA_CONFIG_H('include/config.h')
