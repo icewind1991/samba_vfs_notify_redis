@@ -1,13 +1,8 @@
 #!/usr/bin/env bash
 
-mkdir -p build
-cd build
+mkdir -p build/samba
+cd build/samba
 
-if [ ! -d "samba" ]; then
-    git clone https://github.com/samba-team/samba
+if [ ! -d "$1" ]; then
+    git clone -b $1 https://github.com/samba-team/samba --depth 1 $1
 fi
-
-cd samba
-
-git reset --hard HEAD
-git checkout $1
